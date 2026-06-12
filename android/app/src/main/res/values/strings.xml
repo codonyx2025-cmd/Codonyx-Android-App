@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Codonyx</string>
+    <string name="title_activity_main">Codonyx</string>
+    <string name="package_name">org.codonyx.app</string>
+    <string name="custom_url_scheme">org.codonyx.app</string>
+</resources>

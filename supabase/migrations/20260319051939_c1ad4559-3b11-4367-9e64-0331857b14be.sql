@@ -1,0 +1,1 @@
+ALTER TABLE public.deals ADD COLUMN min_bid_amount numeric NULL DEFAULT NULL;
