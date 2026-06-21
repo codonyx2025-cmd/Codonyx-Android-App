@@ -218,7 +218,7 @@ Supported Formats
 
 Maximum Size
 
-- 30 MB
+- 20 MB
 
 Supported Formats
 
