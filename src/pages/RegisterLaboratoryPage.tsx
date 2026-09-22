@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,9 @@ import codonyxLogo from "@/assets/codonyx_logo.png";
 import EmailVerificationField from "@/components/registration/EmailVerificationField";
 import { RegistrationAvatarUpload } from "@/components/registration/RegistrationAvatarUpload";
 import { TermsCheckbox } from "@/components/registration/TermsCheckbox";
-import { PasswordStrength, calculateStrength } from "@/components/registration/PasswordStrength";
+import { CountryCitySelect } from "@/components/registration/CountryCitySelect";
+import { PhoneNumberInput } from "@/components/registration/PhoneNumberInput";
+import { PasswordStrength, calculateStrength, MIN_PASSWORD_SCORE, PASSWORD_REQUIREMENT_MESSAGE } from "@/components/registration/PasswordStrength";
 import { ensureRegistrationUser } from "@/lib/ensureRegistrationUser";
 import { notifyAdminsOfNewRegistration } from "@/lib/notifyAdmins";
 
@@ -31,6 +33,7 @@ export default function RegisterLaboratoryPage() {
   const [organisation, setOrganisation] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
+  const [countryIso, setCountryIso] = useState("");
   const [bio, setBio] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -45,6 +48,18 @@ export default function RegisterLaboratoryPage() {
 
   // handleAvatarChange removed — using RegistrationAvatarUpload component
 
+  const invalidToastRef = useRef(false);
+  const handleInvalid = (_e: React.FormEvent<HTMLFormElement>) => {
+    if (invalidToastRef.current) return;
+    invalidToastRef.current = true;
+    toast({
+      title: "Missing required fields",
+      description: "Please fill all fields marked with * to submit the registration.",
+      variant: "destructive",
+    });
+    setTimeout(() => { invalidToastRef.current = false; }, 1500);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -56,8 +71,8 @@ export default function RegisterLaboratoryPage() {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
     }
-    if (calculateStrength(password).score < 4) {
-      toast({ title: "Password not strong enough", description: "Password must reach 'Very Strong'. Use 10+ characters with uppercase, lowercase, numbers, and a symbol.", variant: "destructive" });
+    if (calculateStrength(password).score < MIN_PASSWORD_SCORE) {
+      toast({ title: "Password not strong enough", description: PASSWORD_REQUIREMENT_MESSAGE, variant: "destructive" });
       return;
     }
     if (!researchAreas.trim()) {
@@ -185,7 +200,7 @@ export default function RegisterLaboratoryPage() {
             Register your laboratory to connect with expert advisors.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} onInvalid={handleInvalid} className="space-y-5">
             <RegistrationAvatarUpload
               avatarUrl={avatarUrl}
               onAvatarChange={(url, blob) => { setAvatarUrl(url); setAvatarBlob(blob); }}
@@ -193,10 +208,10 @@ export default function RegisterLaboratoryPage() {
 
             <div className="space-y-2">
               <Label htmlFor="fullName" className="text-xs uppercase tracking-wider font-medium">Full Name *</Label>
-              <Input id="fullName" placeholder="Enter your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-12" required />
+              <Input id="fullName" placeholder="Enter Laboratory full name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-12" required />
             </div>
 
-            <EmailVerificationField email={email} onEmailChange={setEmail} isVerified={isEmailVerified} onVerified={setIsEmailVerified} />
+            <EmailVerificationField email={email} onEmailChange={setEmail} isVerified={isEmailVerified} onVerified={setIsEmailVerified} placeholder="Enter laboratory email" />
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -220,20 +235,16 @@ export default function RegisterLaboratoryPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="country" className="text-xs uppercase tracking-wider font-medium">Country *</Label>
-                <Input id="country" placeholder="Enter your country" value={country} onChange={(e) => setCountry(e.target.value)} className="h-12" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city" className="text-xs uppercase tracking-wider font-medium">City *</Label>
-                <Input id="city" placeholder="Enter your city" value={city} onChange={(e) => setCity(e.target.value)} className="h-12" required />
-              </div>
-            </div>
+            <CountryCitySelect
+              country={country}
+              city={city}
+              onCountryChange={(name, iso) => { setCountry(name); setCountryIso(iso); }}
+              onCityChange={setCity}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="contactNumber" className="text-xs uppercase tracking-wider font-medium">Contact Number *</Label>
-              <Input id="contactNumber" type="tel" placeholder="Enter your phone number" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className="h-12" required />
+              <PhoneNumberInput id="contactNumber" value={contactNumber} onChange={setContactNumber} country={countryIso} required />
             </div>
 
             <div className="space-y-2">
